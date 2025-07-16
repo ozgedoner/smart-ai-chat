@@ -1,126 +1,107 @@
 import { useState } from "react";
 import { askAI } from "../lib/ai";
 
-const modes = [
-  { value: "casual", label: "😎 Casual" },
-  { value: "funny", label: "😂 Funny" },
-  { value: "analytical", label: "🧠 Analytical" },
-  { value: "empathetic", label: "😢 Empathetic" },
-  { value: "sarcastic", label: "😏 Sarcastic" },
-  { value: "motivational", label: "💪 Motivational" },
-  { value: "romantic", label: "💘 Romantic" },
-  { value: "academic", label: "🎓 Academic" },
-  { value: "professional", label: "💼 Professional" },
-  { value: "mentor", label: "🧙 Mentor" },
-  { value: "gamer", label: "🎮 Gamer" },
-  { value: "investor", label: "💸 Investor" },
+const personalities = [
+  "funny",
+  "analytical",
+  "empathetic",
+  "motivational",
+  "romantic",
+  "academic",
+  "professional",
+  "mentor",
+  "gamer",
+  "investor",
 ];
 
-function getRandomMode() {
-  return modes[Math.floor(Math.random() * modes.length)].value;
-}
-
 export default function AIvsAI() {
-  const [ai1Mode, setAi1Mode] = useState(getRandomMode());
-  const [ai2Mode, setAi2Mode] = useState(getRandomMode());
-  const [prompt, setPrompt] = useState("What’s your opinion on love and logic?");
-  const [chat, setChat] = useState<string[]>([]);
-  const [turn, setTurn] = useState(0);
-  const [running, setRunning] = useState(false);
+  const [ai1, setAi1] = useState("academic");
+  const [ai2, setAi2] = useState("motivational");
+  const [messages, setMessages] = useState<string[]>([]);
+  const [input, setInput] = useState("Start a debate about love vs logic");
+  const [loading, setLoading] = useState(false);
 
-  async function runTurn(prev: string, mode: string): Promise<string> {
-    const response = await askAI(prev, mode);
-    return response;
-  }
+  async function startDebate() {
+    setLoading(true);
+    setMessages([]);
+    let msg = input;
+    for (let i = 0; i < 2; i++) {
+      const res1 = await askAI(msg, ai1);
+      setMessages((prev) => [...prev, `AI 1: ${res1}`]);
+      msg = res1;
 
-  async function handleStart() {
-    setChat([]);
-    setRunning(true);
-    let current = `AI 1 (${ai1Mode}): ${prompt}`;
-    setChat([current]);
-
-    let next = prompt;
-    for (let i = 0; i < 6; i++) {
-      const mode = i % 2 === 0 ? ai2Mode : ai1Mode;
-      const label = i % 2 === 0 ? "AI 2" : "AI 1";
-      next = await runTurn(next, mode);
-      current = `${label} (${mode}): ${next}`;
-      setChat((prev) => [...prev, current]);
-      await new Promise((r) => setTimeout(r, 1000));
+      const res2 = await askAI(msg, ai2);
+      setMessages((prev) => [...prev, `AI 2: ${res2}`]);
+      msg = res2;
     }
-    setRunning(false);
+    setLoading(false);
   }
 
-  function resetBattle() {
-    setPrompt("");
-    setChat([]);
-    setAi1Mode(getRandomMode());
-    setAi2Mode(getRandomMode());
-    setTurn(0);
-    setRunning(false);
+  function randomize() {
+    const a1 = personalities[Math.floor(Math.random() * personalities.length)];
+    let a2 = a1;
+    while (a2 === a1) {
+      a2 = personalities[Math.floor(Math.random() * personalities.length)];
+    }
+    setAi1(a1);
+    setAi2(a2);
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 space-y-4">
-      <h1 className="text-3xl font-bold text-center">🤖 AI vs AI Duel</h1>
+    <div className="p-6 max-w-3xl mx-auto space-y-4">
+      <h1 className="text-2xl font-bold text-center">🤖 AI vs AI Duel</h1>
 
-      <div className="flex gap-4 w-full max-w-xl">
-        <div className="flex-1">
-          <label className="block text-sm font-medium">AI 1 Personality</label>
-          <select
-            value={ai1Mode}
-            onChange={(e) => setAi1Mode(e.target.value)}
-            className="w-full border p-2 rounded"
-          >
-            {modes.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex-1">
-          <label className="block text-sm font-medium">AI 2 Personality</label>
-          <select
-            value={ai2Mode}
-            onChange={(e) => setAi2Mode(e.target.value)}
-            className="w-full border p-2 rounded"
-          >
-            {modes.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="flex gap-4 justify-center">
+        <select
+          value={ai1}
+          onChange={(e) => setAi1(e.target.value)}
+          className="border p-2 rounded"
+        >
+          {personalities.map((p) => (
+            <option key={p} value={p}>
+              AI 1: {p}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={ai2}
+          onChange={(e) => setAi2(e.target.value)}
+          className="border p-2 rounded"
+        >
+          {personalities.map((p) => (
+            <option key={p} value={p}>
+              AI 2: {p}
+            </option>
+          ))}
+        </select>
       </div>
 
       <input
-        className="w-full max-w-xl border p-2 rounded"
-        placeholder="Starting Prompt"
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Starting prompt..."
+        className="w-full border p-2 rounded"
       />
 
-      <div className="flex gap-4">
+      <div className="flex gap-2 justify-center">
         <button
-          onClick={handleStart}
-          disabled={running || !prompt}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          onClick={startDebate}
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
         >
-          🔁 Start Duel
+          {loading ? "Talking..." : "Start Debate"}
         </button>
-        <button
-          onClick={resetBattle}
-          className="bg-gray-500 text-white px-4 py-2 rounded"
-        >
-          ♻️ New Duel
+        <button onClick={randomize} className="bg-gray-300 px-4 py-2 rounded">
+          🎲 Randomize Personalities
         </button>
       </div>
 
-      <div className="w-full max-w-2xl bg-gray-100 rounded p-4 space-y-2 text-sm h-96 overflow-auto">
-        {chat.map((line, idx) => (
-          <div key={idx}>{line}</div>
+      <div className="bg-gray-100 rounded p-4 space-y-2">
+        {messages.map((m, i) => (
+          <div key={i} className="text-sm">
+            {m}
+          </div>
         ))}
       </div>
     </div>
