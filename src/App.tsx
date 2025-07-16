@@ -10,21 +10,6 @@ export default function App() {
   const [suggestion, setSuggestion] = useState("");
   const [feedbackGiven, setFeedbackGiven] = useState<number[]>([]);
 
-  const modeDescriptions: Record<string, string> = {
-    casual: "Friendly, relaxed tone",
-    funny: "Humorous, witty responses",
-    analytical: "Precise, data-driven tone",
-    empathetic: "Warm, understanding answers",
-    sarcastic: "Ironic and sharp tone",
-    motivational: "Uplifting, positive coaching",
-    romantic: "Poetic and emotional",
-    academic: "Formal, research-style answers",
-    professional: "Businesslike and direct",
-    mentor: "Supportive and guiding",
-    gamer: "Gaming lingo, hype-filled",
-    investor: "Finance and market talk",
-  };
-
   async function handleSend() {
     if (!input.trim()) return;
     setLoading(true);
@@ -76,21 +61,31 @@ export default function App() {
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 space-y-4">
         <h1 className="text-3xl font-bold text-center">🧠 Smart AI Chat</h1>
 
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex justify-center">
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value)}
-            className="border p-2 rounded"
+            className="border p-2 rounded mb-2"
           >
-            {Object.entries(modeDescriptions).map(([key, desc]) => (
-              <option key={key} value={key}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
+            {[
+              "casual",
+              "funny",
+              "analytical",
+              "empathetic",
+              "sarcastic",
+              "motivational",
+              "romantic",
+              "academic",
+              "professional",
+              "mentor",
+              "gamer",
+              "investor",
+            ].map((m) => (
+              <option key={m} value={m}>
+                {m}
               </option>
             ))}
           </select>
-          <span className="text-sm italic text-gray-500">
-            {modeDescriptions[mode]}
-          </span>
         </div>
 
         <div className="flex flex-wrap gap-2 mt-2 justify-center">
@@ -172,7 +167,7 @@ export default function App() {
           onClick={handleSummarize}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg mt-2"
         >
-          📄 Summarize Conversation
+          Summarize Conversation
         </button>
         {summary && (
           <div className="mt-4 p-4 bg-yellow-100 border rounded">
@@ -185,13 +180,13 @@ export default function App() {
             onClick={exportChat}
             className="bg-gray-700 text-white px-4 py-2 rounded-lg mt-2"
           >
-            📥 Download Chat
+            Download Chat as .txt
           </button>
           <button
             onClick={resetChat}
             className="bg-red-500 text-white px-4 py-2 rounded-lg mt-2"
           >
-            🔄 New Chat
+            🔄 Start New Chat
           </button>
         </div>
       </div>
