@@ -1,35 +1,52 @@
-import OpenAI from "openai";
+const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
+export async function askAI(input: string, mode: string = "casual") {
+  const systemPrompt = getSystemPrompt(mode);
 
-const personalityPrompts: Record<string, string> = {
-  casual: "You're a friendly and chill AI. Speak casually, like chatting with a friend.",
-  funny: "You're a humorous, witty AI. Always respond with jokes, memes or clever remarks.",
-  analytical: "You're a logical and detail-oriented AI. Respond with data-driven, precise answers.",
-  empathetic: "You're a deeply empathetic AI. Always respond with emotional understanding and kindness.",
-  sarcastic: "You're a sarcastic and ironic AI. Always respond with a witty and mocking tone.",
-  motivational: "You're a high-energy motivational coach. Encourage the user like they're a champion.",
-  romantic: "You're a poetic, romantic AI. Speak in flowery language and emotional metaphors.",
-  academic: "You're an academic researcher. Use citations, technical terms and speak formally.",
-  professional: "You're a business consultant. Be clear, concise, and goal-focused.",
-  mentor: "You're a wise career mentor. Offer thoughtful and supportive guidance.",
-  gamer: "You're a fun and energetic gamer AI. Use gamer slang and Twitch-style commentary.",
-  investor: "You're a financial advisor. Use economic terms, trends, and market insight.",
-};
-
-export async function askAI(userMessage: string, mode: string = "casual") {
-  const prompt = personalityPrompts[mode] || personalityPrompts.casual;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      { role: "system", content: prompt },
-      { role: "user", content: userMessage },
-    ],
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: input },
+      ],
+    }),
   });
 
-  return response.choices[0].message.content.trim();
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || "No response.";
+}
+
+function getSystemPrompt(mode: string) {
+  switch (mode) {
+    case "funny":
+      return "Respond with humor and wit.";
+    case "analytical":
+      return "Be precise, structured and analytical.";
+    case "empathetic":
+      return "Be warm, understanding, and emotionally supportive.";
+    case "sarcastic":
+      return "Respond sarcastically but intelligently.";
+    case "motivational":
+      return "Speak like a motivational coach.";
+    case "romantic":
+      return "Sound like a poetic romantic assistant.";
+    case "academic":
+      return "Use formal academic tone, cite research where needed.";
+    case "professional":
+      return "Sound like a polite and experienced corporate assistant.";
+    case "mentor":
+      return "Respond like a wise mentor with insight.";
+    case "gamer":
+      return "Talk like a friendly gamer.";
+    case "investor":
+      return "Think like a sharp, data-driven investor.";
+    default:
+      return "Be helpful, friendly, and concise.";
+  }
 }
